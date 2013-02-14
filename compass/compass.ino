@@ -5,6 +5,8 @@ int f = 0;
 float summ = 0;
 int m_avg = 6;
 float m_avg_factor = ((float)m_avg)/(m_avg+1);
+const float limit = 4000.0; //yeah, I know. whatever
+float range[] = {0,0,0,0,0,0};
 
 // Add this outside the methods as a global variable.
 HMC5883L compass;
@@ -14,6 +16,7 @@ void setup(){
   pinMode(8,OUTPUT);
   pinMode(A1,INPUT);
   Serial.begin(9600);
+  
 
   compass = HMC5883L();
   Serial.println("Setting scale to +/- 1.3 Ga");
@@ -46,48 +49,49 @@ char* addNum(char* str, int x){
 void loop()
 {
   // Retrive the raw values from the compass (not scaled).
-  MagnetometerScaled raw = compass.ReadScaledAxis();
+  MagnetometerRaw raw = compass.ReadRawAxis();
 
   int axis = raw.XAxis;
 
   // Retrived the scaled values from the compass (scaled to the configured scale).
   MagnetometerScaled scaled = compass.ReadScaledAxis();
   
-  // Calculate heading when the magnetometer is level, then correct for signs of axis.
-  float heading = atan2(raw.YAxis, raw.XAxis);
-   
-  // Correct for when signs are reversed.
-  if(heading < 0)
-    heading += 2*PI;
-   
-  // Convert radians to degrees for readability.
-  float headingDegrees = heading * 180/M_PI; 
 
-  // Output the data via the serial port.
-//  Output(raw, scaled, heading, headingDegrees);
-  
-  int val = abs(scaled.XAxis * 4);// + abs(scaled.YAxis) + abs(scaled.ZAxis));
 
-//  Serial.println(raw.XAxis);
+  int axes[] = {raw.XAxis,raw.YAxis,raw.ZAxis};
   
-  if (abs(axis) < (summ+2000)){
+  for (int i = 0; i < 6; i+=2){
+      float v = axes[i]*m_avg;
+      if (v < range[i]){
+        range[i] += v;
+        range[i] *= m_avg_factor;
+      }
+      if (v > range[i+1]){
+        range[i+1] += v; 
+        range[i+1] *= m_avg_factor;
+      }     
+  } 
+  
+//  char out[30];
+//  out[29] = 0;
+//  char* str = addNum(&out[28],map(raw.ZAxis,(range[4]/m_avg),(range[5]/m_avg), -999, +999));
+//  *str = ',';
+//  --str;
+//  str = addNum(str,raw.YAxis);
+//  *str = ',';
+//  --str;
+//  str = addNum(str,raw.XAxis);
+
+
+    Serial.print(get_val(axes,0));
+    Serial.print(",");
+    Serial.print(get_val(axes,1));
+    Serial.print(",");
+    Serial.println(get_val(axes,2));
     
-    summ += axis;
-    summ *= m_avg_factor;
-  }
-  
-  char out[30];
-  out[29] = 0;
-  char* str = addNum(&out[28],raw.ZAxis);
-  *str = ',';
-  --str;
-  str = addNum(str,raw.YAxis);
-  *str = ',';
-  --str;
-  str = addNum(str,raw.XAxis);
 
   
-   Serial.println(++str);
+//   Serial.println(++str);
 
   
 //  int m = 10000;
@@ -97,6 +101,12 @@ void loop()
   
   delay(1);
 
+}
+
+int get_val(int* axes, int axisIndex){
+  int v = axes[axisIndex];
+  axisIndex << 1;
+  return map(v, (range[axisIndex]/m_avg),(range[axisIndex+1]/m_avg), -999,999);
 }
 
 // Output the data down the serial port.
