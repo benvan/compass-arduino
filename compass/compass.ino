@@ -46,10 +46,10 @@ char* addNum(char* str, int x){
   return str;
 }
 
-int get_val(int axisIndex){  
+long get_val(int axisIndex){  
   float v = vals[axisIndex];
-  axisIndex <<= 1;
-  return (int) map((long) (v / m_avg), (range[axisIndex]/m_avg), (range[axisIndex+1]/m_avg), -100, 100);
+  //return v;
+  return (v/m_avg);
 }
   
 void setup_axes(){
@@ -63,32 +63,22 @@ void setup_axes(){
 void update_vals(){
   int i = 3;
   while (i --> 0){
+    //should check here for huge / erroneous values
     vals[i] += axes[i];
     vals[i] *= m_avg_factor;
   }
 }
 
 void output(){
-   Serial.print(vals[0] / m_avg);  
+   float f;
+   f = (float)get_val(0);
+   Serial.print(f);  
    Serial.print(",");
-   Serial.print(vals[1] / m_avg);
+   f = (float) get_val(1);
+   Serial.print(f);  
    Serial.print(",");
-   float val = vals[2] / m_avg;
-   Serial.println(val);
-   if (val > 2000.0){
-     int i = 5;
-     while(i --> 0){
-       Serial.print("o");
-     }
-     Serial.print("h snap!   -   ");
-     Serial.print(axes[0]);  
-     Serial.print(",");
-     Serial.print(axes[1]);
-     Serial.print(",");
-     Serial.println(axes[2]);
-     delay(1000);
-   }
-   
+   f = (float) get_val(2);
+   Serial.println(f);
 }
 
 void loop()
@@ -101,6 +91,7 @@ void loop()
 //  update_bounds();  
 
   output();
+
 
   delay(1);
 
