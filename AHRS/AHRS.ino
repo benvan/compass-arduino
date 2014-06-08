@@ -185,7 +185,7 @@
 #define OUTPUT__FORMAT_BINARY 1 // Outputs data as binary float
 
 // Select your startup output mode and format here!
-int output_mode = OUTPUT__MODE_SENSORS_RAW; //OUTPUT__MODE_ANGLES;
+int output_mode = OUTPUT__MODE_ANGLES;
 int output_format = OUTPUT__FORMAT_TEXT;
 
 // Select if serial continuous streaming output is enabled per default on startup.
@@ -458,6 +458,7 @@ void setup()
 #endif
 }
 
+
 // Main loop
 void loop()
 {
@@ -592,6 +593,8 @@ void loop()
     {      
       if (output_stream_on || output_single_on) output_sensors();
     }
+    
+    output_pulse();
     
     output_single_on = false;
     

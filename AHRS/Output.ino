@@ -1,5 +1,36 @@
 /* This file is part of the Razor AHRS Firmware */
 
+unsigned long next;
+unsigned long last;
+unsigned long duration = 10l;
+
+void output_pulse(){
+  float dir[3];
+  float xzLen = cos(pitch);
+  dir[0] = xzLen * cos(yaw);
+  dir[1] = sin(pitch);
+  dir[2] = xzLen * sin(-yaw);
+  
+  float target[3] = {1.0f,0.0f,0.0f};
+  float diff = Vector_Dot_Product(dir,target);
+  
+  float intensity = 0.5f + (diff/2.0f);
+  int wut = ((int)(intensity * 250.f));
+  int del = 265 - wut;
+  
+  long time = millis();
+  if (last + duration < time){
+    analogWrite(9,0);
+  }
+  if (time > next){
+    analogWrite(9,255);
+    last = time;
+    next = time + del;
+  }
+
+  
+}
+
 // Output angles: yaw, pitch, roll
 void output_angles()
 {
