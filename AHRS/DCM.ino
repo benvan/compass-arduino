@@ -118,6 +118,12 @@ void Matrix_update(void)
   }
 }
 
+void Stash_euler_angles(void){
+  opitch = pitch;
+  oroll = roll;
+  oyaw = yaw;
+}
+
 void Euler_angles(void)
 {
   pitch = -asin(DCM_Matrix[2][0]);

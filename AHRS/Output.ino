@@ -4,7 +4,73 @@ unsigned long next;
 unsigned long last;
 unsigned long duration = 10l;
 
+float *tick_boundaries;
+int n_tick_boundaries;
+
+void init_tick_boundaries(){
+  float deg = 0.0f;
+  float d = 1.3f;
+  float dd = d;
+
+  int n = 0;
+  while(deg < 180.0f){
+    n++;
+    deg += dd;
+    dd += d;
+  }
+  n_tick_boundaries = n+1;
+  tick_boundaries = (float*)malloc(sizeof(float)*n_tick_boundaries);
+  float prev = 0.0f;
+  float rd = TO_RAD(d);
+  float rdd = rd;
+  for (int i = 0; i < n; i++){
+    tick_boundaries[i] = prev+rdd;
+    rdd += rd;
+    prev = tick_boundaries[i];
+  }
+}
+
+void output_tick(){
+  //todo: no consideration paid to 180d boundary here - fix it
+  int space = 0;
+  int sign = (yaw > 0) ? 1 : -1;
+  float absOYaw = abs(oyaw);
+  float absCYaw = abs(yaw);
+  int oBound = -1;
+  int cBound = -1;
+  //where's the nearest lower tick bound?
+  for (int i = 0; i < n_tick_boundaries; i++){
+    if (tick_boundaries[i] > absOYaw){
+      oBound = i;
+      break;
+    }
+  }
+  //Serial.print(oBound);Serial.print(" - ");Serial.print(n_tick_boundaries);Serial.print(" - ");
+  //Serial.print(TO_DEG(tick_boundaries[oBound]));Serial.print("->");Serial.print(TO_DEG(tick_boundaries[oBound+1]));
+  //Serial.print(" : ");Serial.print(TO_DEG(absCYaw)); Serial.print(" ---- "); Serial.println(TO_DEG(absOYaw));
+  if (absCYaw < tick_boundaries[oBound - 1]){
+    // we've ticked towards target
+    analogWrite(9,220);
+    delay(5);
+    analogWrite(9,0);
+  } else if (absCYaw > tick_boundaries[oBound]){
+    if (oBound < 2){
+      analogWrite(9,190);
+      delay(5);
+      analogWrite(9,0);
+    }else{
+      // we've ticked away from target
+      analogWrite(9,150);
+      delay(3);
+      analogWrite(9,0);
+    }
+  }
+
+
+}
+
 void output_pulse(){
+  return;
   float dir[3];
   float xzLen = cos(pitch);
   dir[0] = xzLen * cos(yaw);
@@ -27,8 +93,6 @@ void output_pulse(){
     last = time;
     next = time + del;
   }
-
-  
 }
 
 // Output angles: yaw, pitch, roll

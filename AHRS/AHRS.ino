@@ -314,6 +314,11 @@ float yaw;
 float pitch;
 float roll;
 
+float oyaw;
+float opitch;
+float oroll;
+ 
+
 // DCM timing in the main loop
 unsigned long timestamp;
 unsigned long timestamp_old;
@@ -437,6 +442,8 @@ void setup()
   
   // Init status LED
   pinMode (STATUS_LED_PIN, OUTPUT);
+  pinMode (9, OUTPUT);
+  pinMode (10, OUTPUT);
   digitalWrite(STATUS_LED_PIN, LOW);
 
   // Init sensors
@@ -445,6 +452,7 @@ void setup()
   Accel_Init();
   Magn_Init();
   Gyro_Init();
+  init_tick_boundaries();
   
   // Read sensors, init DCM algorithm
   delay(20);  // Give sensors enough time to collect data
@@ -585,6 +593,7 @@ void loop()
       Matrix_update();
       Normalize();
       Drift_correction();
+      Stash_euler_angles();
       Euler_angles();
       
       if (output_stream_on || output_single_on) output_angles();
@@ -595,6 +604,7 @@ void loop()
     }
     
     output_pulse();
+    output_tick();
     
     output_single_on = false;
     
